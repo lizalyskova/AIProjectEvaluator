@@ -1,0 +1,307 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f7fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+h1 {
+    color: #2c3e50;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+.upload-box {
+    background-color: #fff;
+    border: 2px dashed #95a5a6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.upload-box:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.upload-box label {
+    display: block;
+    margin-bottom: 10px;
+    color: #34495e;
+}
+
+.upload-box input[type="file"] {
+    width: 100%;
+}
+
+button {
+    background-color: #3498db;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.chart-wrapper {
+    text-align: center;
+    margin-right: 20px;
+    margin-left: 30px; /* Сдвигаем вправо для визуального центрирования круга */
+}
+
+.chart-wrapper h2 {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+#scoreChart {
+    max-width: 400px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.chart-legend {
+    margin-left: 20px;
+    text-align: left;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    margin-right: 5px;
+    cursor: pointer; /* Для отображения подсказки при наведении */
+}
+
+/* Классы для цветов */
+.color-1 { background-color: #8faafc; } /* 27 баллов */
+.color-2 { background-color: #b5f57a; } /* 28 баллов */
+.color-3 { background-color: #f09dc5; } /* 12 баллов */
+.color-4 { background-color: #fddb7c; }
+.color-5 { background-color: #8cfddf; }
+.color-6 { background-color: #d9aee9; }
+.color-7 { background-color: #fd89de; }
+.color-8 { background-color: #aeebae; }
+.color-9 { background-color: #fdc074; }
+.color-10 { background-color: #abe1f4; }
+.color-11 { background-color: #f6a9a9; }
+.color-12 { background-color: #b4b4ed; }
+
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 0 auto 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    border: 1px solid #dfe6e9;
+    padding: 8px;
+    text-align: left;
+    font-size: 12px;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+th {
+    background-color: #3498db;
+    color: #fff;
+    max-width: 150px;
+}
+
+td {
+    max-width: 150px;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #ecf0f1;
+}
+
+.links {
+    margin: 20px 0;
+}
+
+.button {
+    display: inline-block;
+    background-color: #3498db;
+    color: #fff;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 0 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #2980b9;
+}
+
+.back-link-container {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.back-link {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 1em;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+canvas {
+    max-width: 100%;
+    margin: 20px auto;
+    display: block;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #f4f7fa;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    display: none;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #3498db;
+    width: 0;
+    transition: width 0.3s ease-in-out;
+}
+
+.progress-fill:hover {
+    background-color: #2980b9;
+}
+
+#progress-text {
+    color: #34495e;
+    font-size: 1em;
+    display: none;
+}
+
+.help-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 20px;
+    color: #3498db;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.help-icon:hover {
+    color: #2980b9;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid #dfe6e9;
+    z-index: 1001;
+    transition: opacity 0.3s;
+}
+
+.modal h2 {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.modal p {
+    color: #34495e;
+    font-size: 1em;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: #3498db;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: #2980b9;
+}

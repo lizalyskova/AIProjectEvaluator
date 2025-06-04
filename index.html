@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project Evaluator</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <span class="help-icon" onclick="openModal('help-modal')">?</span>
+        <h1>AI Project Evaluator</h1>
+        <form id="upload-form" enctype="multipart/form-data" action="/process/" method="post">
+            <div class="upload-box">
+                <label for="criteria-file">Критерии (.docx, .pdf, .txt)</label>
+                <input type="file" id="criteria-file" name="criteria_file" accept=".docx,.pdf,.txt" required>
+            </div>
+            <div class="upload-box">
+                <label for="work-files">Работы (до 30, .docx, .pdf, .txt)</label>
+                <input type="file" id="work-files" name="work_files" accept=".docx,.pdf,.txt" multiple required>
+            </div>
+            <button type="submit" id="process-button">Обработать файлы</button>
+        </form>
+        <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div id="progress-text">Обработка: 0%</div>
+    </div>
+
+    <div class="modal-overlay" id="help-modal-overlay"></div>
+    <div class="modal" id="help-modal">
+        <span class="modal-close" onclick="closeModal('help-modal')">×</span>
+        <h2>Инструкция по использованию</h2>
+        <p>Назначение: Приложение автоматически оценивает школьные проекты по заданным критериям.</p>
+        <p>Шаг 1: Загрузите файл критериев (.docx, .pdf, .txt, до 50 МБ) в поле "Критерии".</p>
+        <p>Шаг 2: Загрузите до 30 файлов работ учащихся (.docx, .pdf, .txt, до 50 МБ) в поле "Работы".</p>
+        <p>Шаг 3: Нажмите "Обработать файлы". Прогресс отобразится внизу.</p>
+        <p>Шаг 4: После обработки просмотрите таблицу оценок и скачайте файлы: "Excel" (оценки) и "Рекомендации".</p>
+        <p>Совет: Убедитесь, что файлы содержат метаданные (автор, класс, школа, название проекта).</p>
+    </div>
+
+    <div class="modal-overlay" id="error-modal-overlay"></div>
+    <div class="modal" id="error-modal">
+        <span class="modal-close" onclick="closeModal('error-modal')">×</span>
+        <h2>Ошибка</h2>
+        <p id="error-modal-text">Произошла ошибка.</p>
+        <button id="retry-button" onclick="retry()">Попробовать снова</button>
+    </div>
+
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}/ws/progress`);
+        let uploadedFiles = new Set();
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('WebSocket message:', data); // Отладка
+            if (data.type === "progress") {
+                const percent = data.percent;
+                document.getElementById("progress-fill").style.width = `${percent}%`;
+                document.getElementById("progress-text").textContent = `Обработка: ${percent}%`;
+                document.getElementById("progress-bar").style.display = "block";
+                document.getElementById("progress-text").style.display = "block";
+            } else if (data.type === "complete") {
+                document.getElementById("progress-fill").style.width = "100%";
+                document.getElementById("progress-text").textContent = "Обработка: 100%";
+            }
+        };
+
+        ws.onclose = function() {
+            showError("Соединение с сервером потеряно. Попробуйте обновить страницу.", false);
+        };
+
+        function showError(message, showRetry) {
+            console.log('Showing error:', message); // Отладка
+            openModal('error-modal');
+            document.getElementById('error-modal-text').textContent = message;
+            document.getElementById('retry-button').style.display = showRetry ? 'inline-block' : 'none';
+            uploadedFiles.clear(); // Сброс дубликатов
+        }
+
+        document.getElementById("upload-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const criteriaFile = document.getElementById("criteria-file").files[0];
+            const workFiles = document.getElementById("work-files").files;
+            const allowedFormats = [".docx", ".pdf", ".txt"];
+            const maxSize = 50 * 1024 * 1024; // 50 МБ
+
+            // Проверка файла критериев
+            if (criteriaFile) {
+                const ext = criteriaFile.name.substring(criteriaFile.name.lastIndexOf(".")).toLowerCase();
+                if (!allowedFormats.includes(ext)) {
+                    showError(`Файл ${criteriaFile.name} имеет неподдерживаемый формат. Только .docx, .pdf или .txt файлы.`, false);
+                    return;
+                }
+                if (criteriaFile.size > maxSize) {
+                    showError(`Файл ${criteriaFile.name} превышает 50 МБ. Пожалуйста, загрузите файл меньшего размера.`, false);
+                    return;
+                }
+                if (criteriaFile.size === 0) {
+                    showError(`Файл ${criteriaFile.name} пустой или не содержит текста. Пожалуйста, загрузите файл с содержимым.`, false);
+                    return;
+                }
+                if (uploadedFiles.has(criteriaFile.name)) {
+                    showError(`Обнаружен дубликат файла: ${criteriaFile.name}. Пожалуйста, загрузите уникальный файл.`, false);
+                    return;
+                }
+                uploadedFiles.add(criteriaFile.name);
+            }
+
+            // Проверка файлов работ
+            if (workFiles.length > 30) {
+                showError("Слишком много файлов работ (максимум 30).", false);
+                return;
+            }
+            for (let file of workFiles) {
+                const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+                if (!allowedFormats.includes(ext)) {
+                    showError(`Файл ${file.name} имеет неподдерживаемый формат. Только .docx, .pdf или .txt файлы.`, false);
+                    return;
+                }
+                if (file.size > maxSize) {
+                    showError(`Файл ${file.name} превышает 50 МБ. Пожалуйста, загрузите файл меньшего размера.`, false);
+                    return;
+                }
+                if (file.size === 0) {
+                    showError(`Файл ${file.name} пустой или не содержит текста. Пожалуйста, загрузите файл с содержимым.`, false);
+                    return;
+                }
+                if (uploadedFiles.has(file.name)) {
+                    showError(`Обнаружен дубликат файла: ${file.name}. Пожалуйста, загрузите уникальный файл.`, false);
+                    return;
+                }
+                uploadedFiles.add(file.name);
+            }
+
+            // Отправка формы
+            console.log('Submitting form'); // Отладка
+            const formData = new FormData(this);
+            fetch("/process/", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                console.log('Server response:', response); // Отладка
+                if (response.ok) {
+                    response.text().then(html => {
+                        document.body.innerHTML = html;
+                        uploadedFiles.clear(); // Сброс после успеха
+                    });
+                } else {
+                    response.json().then(data => {
+                        const isApiError = data.detail.includes("Не удалось подключиться к API");
+                        showError(data.detail || "Ошибка обработки файлов.", isApiError);
+                    });
+                }
+            }).catch(err => {
+                showError("Ошибка соединения с сервером.", false);
+            });
+        });
+
+        function openModal(modalId) {
+            document.getElementById(`${modalId}-overlay`).style.display = "block";
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(`${modalId}-overlay`).style.display = "none";
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        function retry() {
+            closeModal("error-modal");
+            fetch("/api/test-connection").then(response => {
+                console.log('Retry API connection:', response); // Отладка
+                if (response.ok) {
+                    document.getElementById("upload-form").dispatchEvent(new Event("submit"));
+                } else {
+                    showError("Не удалось подключиться к API. Пожалуйста, проверьте настройки API или попробуйте снова.", true);
+                }
+            }).catch(err => {
+                showError("Ошибка соединения с сервером.", false);
+            });
+        }
+    </script>
+    
+    <script>
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/progress');
+        
+        socket.onopen = function() {
+            console.log('WebSocket connection opened');
+        };
+        
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === "progress") {
+                const progressBar = document.querySelector('.progress-bar');
+                const progressFill = document.querySelector('.progress-fill');
+                const progressText = document.getElementById('progress-text');
+                progressBar.style.display = 'block';
+                progressText.style.display = 'block';
+                progressFill.style.width = `${data.percent}%`;
+                progressText.textContent = `Обработка: ${data.percent}%`;
+            }
+            if (data.type === "complete") {
+                document.querySelector('.progress-bar').style.display = 'none';
+                document.getElementById('progress-text').style.display = 'none';
+            }
+        };
+        
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+        
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+        
+        document.getElementById('processButton').addEventListener('click', function() {
+            const criteriaInput = document.getElementById('criteriaInput');
+            const workInput = document.getElementById('workInput');
+            if (!criteriaInput.files.length || !workInput.files.length) {
+                alert('Пожалуйста, загрузите файлы критериев и работ.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('criteria_file', criteriaInput.files[0]);
+            for (let file of workInput.files) {
+                formData.append('work_files', file);
+            }
+            fetch('/process/', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Ошибка обработки файлов');
+                }
+            }).then(html => {
+                document.body.innerHTML = html;
+            }).catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при обработке файлов.');
+            });
+        });
+    </script>
+</body>
+</html>
